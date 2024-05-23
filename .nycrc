@@ -1,0 +1,10 @@
+{
+  "extends": "@istanbuljs/nyc-config-typescript",
+  "all": true,
+  "include": ["src/**/*.ts"],
+  "exclude": ["src/test/**/*.test.ts", "node_modules"],
+  "reporter": ["html", "text", "text-summary", "lcov"],
+  "cache": false,
+  "sourceMap": false,
+  "instrument": true
+}
