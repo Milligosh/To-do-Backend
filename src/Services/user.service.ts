@@ -1,10 +1,8 @@
 import pool from "../config/database/db";
-import { userQueries } from "../Queries/user";
+import { userQueries } from "../queries/user";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import config from "../config/env/development";
-
-
 
 export default interface User {
   id: string;
@@ -22,7 +20,9 @@ export class CreateUserService {
     const { firstName, lastName, userName, email, password, phoneNumber } =
       body;
 
-    const userExist: User = (await pool.query(userQueries.fetchUserByEmail, [email])).rows[0];
+    const userExist: User = (
+      await pool.query(userQueries.fetchUserByEmail, [email])
+    ).rows[0];
 
     if (userExist) {
       throw {
@@ -33,7 +33,9 @@ export class CreateUserService {
       };
     }
 
-    const userNameExist: User = (await pool.query(userQueries.fetchUserByUsername, [userName])).rows[0];
+    const userNameExist: User = (
+      await pool.query(userQueries.fetchUserByUsername, [userName])
+    ).rows[0];
 
     if (userNameExist) {
       throw {
@@ -66,7 +68,9 @@ export class CreateUserService {
   static async logInUser(body: any): Promise<any> {
     const { email, password } = body;
 
-    const checkIfExist: User = (await pool.query(userQueries.fetchUserByEmail, [email])).rows[0];
+    const checkIfExist: User = (
+      await pool.query(userQueries.fetchUserByEmail, [email])
+    ).rows[0];
 
     if (!checkIfExist) {
       throw {
@@ -86,7 +90,10 @@ export class CreateUserService {
       created_at,
     } = checkIfExist;
 
-    const comparePassword: boolean = bcrypt.compareSync(password, databasePassword);
+    const comparePassword: boolean = bcrypt.compareSync(
+      password,
+      databasePassword
+    );
 
     if (!comparePassword) {
       throw {
@@ -126,4 +133,5 @@ export class CreateUserService {
         created_at,
       },
     };
-  }}
+  }
+}

@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from "express";
-import { CreateUserService } from "../Services/user.service";
+import { CreateUserService } from "../services/user.service";
 
 export class UserController {
   static async newUser(
@@ -26,4 +26,5 @@ export class UserController {
     } catch (error) {
       next(error);
     }
-    }}
+  }
+}

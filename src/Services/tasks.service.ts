@@ -1,5 +1,5 @@
 import pool from "../config/database/db";
-import { taskQueries } from "../Queries/tasks";
+import { taskQueries } from "../queries/tasks";
 import User from "./user.service";
 
 export default interface Task {
@@ -9,14 +9,15 @@ export default interface Task {
   created_at: string;
   updated_at: string;
   priority: number;
-  completed:boolean
+  completed: boolean;
 }
 
 export class TaskService {
   static async createTask(body: any): Promise<any> {
     const { userId, task, priority } = body;
 
-    // const checkIfExist= (await pool.query(taskQueries.checkUserExist,[id])).rows[0]
+    
+    // const checkIfExist:Task= (await pool.query(taskQueries.checkUserExist,[id])).rows[0]
     // if (!checkIfExist){
     //   return{
     //     code: 400,
@@ -50,25 +51,27 @@ export class TaskService {
     }
   }
   static async fetchAll(filters: any): Promise<any> {
-    let query = taskQueries.fetchAllTasksForAUser;
+    let query = taskQueries.fetchAllTasksForAUser ;
     const values: any[] = [];
-  
+
     if (filters.priority) {
       query += ` AND priority = $${values.length + 1}`;
       values.push(filters.priority);
     }
-  
+
     if (filters.completed) {
       query += ` AND completed = $${values.length + 1}`;
       values.push(filters.completed);
     }
     if (filters.search) {
-        query += ` AND (task ILIKE $${values.length + 1} OR userId::text ILIKE $${values.length + 1})`;
-        values.push(`%${filters.search}%`);
-      }
-  
+      query += ` AND (task ILIKE $${values.length + 1} OR userId::text ILIKE $${
+        values.length + 1
+      })`;
+      values.push(`%${filters.search}%`);
+    }
+    
     const data: Task[] = (await pool.query(query, values)).rows;
-  
+
     return {
       status: "success",
       message: "Tasks fetched successfully",
@@ -78,9 +81,9 @@ export class TaskService {
   }
 
   static async deleteTask(id: string): Promise<any> {
-    const findById:User= (await pool.query(taskQueries.fetchTaskbyId,[id])).rows[0]
-    
-      
+    const findById: User = (await pool.query(taskQueries.fetchTaskbyId, [id]))
+      .rows[0];
+
     if (!findById) {
       throw {
         status: "Error",
@@ -88,29 +91,26 @@ export class TaskService {
         code: 400,
         data: null,
       };
-    }else
-    try {
+    } else
+      try {
         const taskDetails = (await pool.query(taskQueries.deleteTask, [id]))
-      .rows[0];
-    return {
-      status: "Success",
-      message: `Task with id ${id} deleted successfully`,
-      code: 200,
-      data: findById
-    };
-    } catch (error) {
-        next (error)
-    }
-    
- }
+          .rows[0];
+        return {
+          status: "Success",
+          message: `Task with id ${id} deleted successfully`,
+          code: 200,
+          data: findById,
+        };
+      } catch (error) {
+        next(error);
+      }
+  }
 
   static async editDetails(body: any): Promise<any> {
-    const { id, task, priority,completed } = body;
-
-    const existingTask: Task= (
+    const { id, task, priority, completed } = body;
+    const existingTask: Task = (
       await pool.query(taskQueries.checkIfTaskExist, [id])
     ).rows[0];
-
     if (!existingTask) {
       return {
         status: "Error",
@@ -119,21 +119,17 @@ export class TaskService {
         data: null,
       };
     }
-
     const updateParams: any[] = [];
     const updateFields: string[] = [];
-
     const addUpdateField = (paramValue: any, paramName: string) => {
       if (paramValue !== undefined) {
         updateParams.push(paramValue);
         updateFields.push(`${paramName}=$${updateParams.length}`);
       }
     };
-
     addUpdateField(task, "task");
     addUpdateField(priority, "priority");
     addUpdateField(completed, "completed");
-
     if (updateParams.length === 0) {
       return {
         status: "Error",
@@ -142,25 +138,24 @@ export class TaskService {
         data: null,
       };
     }
-
     const updateQuery: string = `UPDATE tasks SET ${updateFields.join(
       ","
     )} WHERE id=$${updateParams.length + 1}`;
     updateParams.push(id);
-
     const data: Task = (await pool.query(updateQuery, updateParams)).rows[0];
-    const updatedTaskQueryResult = await pool.query(taskQueries.fetchTaskbyId, [id]);
+    const updatedTaskQueryResult = await pool.query(taskQueries.fetchTaskbyId, [
+      id,
+    ]);
     const updatedTask: Task = updatedTaskQueryResult.rows[0];
     updatedTask.completed = completed;
     return {
       status: "Success",
       message: `Task with id ${id} updated successfully`,
       code: 200,
-      data:updatedTask
+      data: updatedTask
     };
-  }  
+  }
 }
 function next(errror: any) {
- throw new Error("Function not implemented.");
+  throw new Error("Function not implemented.");
 }
-
