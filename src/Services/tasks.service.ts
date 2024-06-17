@@ -4,7 +4,7 @@ import User from "./user.service";
 
 export default interface Task {
   id: string;
-  userId: string;
+  userid: string;
   task: string;
   created_at: string;
   updated_at: string;
@@ -37,7 +37,7 @@ export class TaskService {
       return {
         code: 201,
         status: "success",
-        message: "New Post created successfully",
+        message: "New task created successfully",
         data: rows[0],
       };
     } catch (error: any) {
@@ -50,9 +50,9 @@ export class TaskService {
       };
     }
   }
-  static async fetchAll(filters: any): Promise<any> {
+  static async fetchAll(userId:string,filters: any): Promise<any> {
     let query = taskQueries.fetchAllTasksForAUser ;
-    const values: any[] = [];
+    const values: any[] = [userId];
 
     if (filters.priority) {
       query += ` AND priority = $${values.length + 1}`;
@@ -71,50 +71,63 @@ export class TaskService {
     }
     
     const data: Task[] = (await pool.query(query, values)).rows;
-
+    if (!data || data.length===0){
+      throw{
+        status: "error",
+        message: "no tasks to fetch",
+        code: 404,
+        data:null
+      }
+    }else
     return {
       status: "success",
       message: "Tasks fetched successfully",
       code: 200,
       data,
-    };
+    }
   }
 
-  static async deleteTask(id: string): Promise<any> {
-    const findById: User = (await pool.query(taskQueries.fetchTaskbyId, [id]))
-      .rows[0];
+  static async deleteTask(id: string, userId: string): Promise<any> {
+    try {
+      const findById: Task = (await pool.query(taskQueries.fetchTaskbyId, [id])).rows[0];
 
-    if (!findById) {
-      throw {
+      if (!findById || findById.userid !== userId) {
+        return {
+          status: "Error",
+          message: `Task with id ${id} does not exist or does not belong to the user`,
+          code: 400,
+          data: null,
+        };
+      }
+
+      const deleteATask=(await pool.query(taskQueries.deleteTask, [id, userId])).rows[0];
+
+      return {
+        status: "Success",
+        message: `Task with id ${id} deleted successfully`,
+        code: 200,
+        data: findById,
+      };
+    } catch (error) {
+      console.error("Error deleting task:", error);
+      return {
         status: "Error",
-        message: `Task with id ${id} does not exist`,
-        code: 400,
+        message: "An error occurred while deleting the task",
+        code: 500,
         data: null,
       };
-    } else
-      try {
-        const taskDetails = (await pool.query(taskQueries.deleteTask, [id]))
-          .rows[0];
-        return {
-          status: "Success",
-          message: `Task with id ${id} deleted successfully`,
-          code: 200,
-          data: findById,
-        };
-      } catch (error) {
-        next(error);
-      }
+    }
   }
 
-  static async editDetails(body: any): Promise<any> {
+  static async editDetails(userId:string ,body: any): Promise<any> {
     const { id, task, priority, completed } = body;
     const existingTask: Task = (
       await pool.query(taskQueries.checkIfTaskExist, [id])
     ).rows[0];
-    if (!existingTask) {
+    if (!existingTask || existingTask.userid !== userId) {
       return {
         status: "Error",
-        message: `Task with id ${id} does not exist`,
+        message: `Task with id ${id} does not exist or does not belong to the user`,
         code: 400,
         data: null,
       };
@@ -138,10 +151,8 @@ export class TaskService {
         data: null,
       };
     }
-    const updateQuery: string = `UPDATE tasks SET ${updateFields.join(
-      ","
-    )} WHERE id=$${updateParams.length + 1}`;
-    updateParams.push(id);
+    const updateQuery: string = `UPDATE tasks SET ${updateFields.join(", ")} WHERE id=$${updateParams.length + 1} AND userId=$${updateParams.length + 2} RETURNING *`;
+    updateParams.push(id, userId);
     const data: Task = (await pool.query(updateQuery, updateParams)).rows[0];
     const updatedTaskQueryResult = await pool.query(taskQueries.fetchTaskbyId, [
       id,

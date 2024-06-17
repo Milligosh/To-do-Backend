@@ -17,7 +17,7 @@ export default interface User {
 
 export class CreateUserService {
   static async newUser(body: any): Promise<any> {
-    const { firstName, lastName, userName, email, password, phoneNumber } =
+    const { firstname, lastname, username, email, password, phonenumber } =
       body;
 
     const userExist: User = (
@@ -34,7 +34,7 @@ export class CreateUserService {
     }
 
     const userNameExist: User = (
-      await pool.query(userQueries.fetchUserByUsername, [userName])
+      await pool.query(userQueries.fetchUserByUsername, [username])
     ).rows[0];
 
     if (userNameExist) {
@@ -49,12 +49,12 @@ export class CreateUserService {
     const saltRounds = 12;
     const hashPassword: string = bcrypt.hashSync(password, saltRounds);
     const response = await pool.query(userQueries.createNewUser, [
-      firstName,
-      lastName,
-      userName,
+      firstname,
+      lastname,
+      username,
       email,
       hashPassword,
-      phoneNumber,
+      phonenumber,
     ]);
 
     return {

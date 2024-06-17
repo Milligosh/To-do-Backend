@@ -115,12 +115,12 @@ describe("Task test", () => {
 
   it("should fail to create a new user when username already exists", async () => {
     const body = {
-      firstName: "Milli",
-      lastName: "Belll",
-      userName: "milliiibel",
+      firstname: "Milli",
+      lastname: "Belll",
+      username: "milliiibel",
       email: "millibelll@gmail.com",
       password: "12345678",
-      phoneNumber: "0453877776",
+      phonenumber: "0453877776",
     };
 
     poolQueryStub.onFirstCall().resolves({ rows: [] }); // No user with the email
@@ -143,7 +143,7 @@ describe("Task test", () => {
     );
     expect(poolQueryStub.secondCall).to.have.been.calledWith(
       userQueries.fetchUserByUsername,
-      [body.userName]
+      [body.username]
     );
   });
 
@@ -198,6 +198,7 @@ describe("Task test", () => {
 
   it("should successfully delete a task", async () => {
     const taskId = "1";
+    const userId ="2"
 
     const taskDetails = {
       id: taskId,
@@ -209,7 +210,7 @@ describe("Task test", () => {
     poolQueryStub.onFirstCall().resolves({ rows: [taskDetails] }); // Task found by ID
     poolQueryStub.onSecondCall().resolves({ rows: [] }); // Task deleted
 
-    const result = await TaskService.deleteTask(taskId);
+    const result = await TaskService.deleteTask(taskId,userId);
 
     expect(result).to.deep.equal({
       status: "Success",
@@ -230,11 +231,12 @@ describe("Task test", () => {
 
   it("should fail to delete a task that does not exist", async () => {
     const taskId = "1";
+    const userId ="2"
 
     poolQueryStub.resolves({ rows: [] }); // No task found by ID
 
     try {
-      await TaskService.deleteTask(taskId);
+      await TaskService.deleteTask(taskId,userId);
     } catch (error: any) {
       expect(error).to.deep.equal({
         status: "Error",
@@ -251,6 +253,7 @@ describe("Task test", () => {
 
   it("should successfully delete a task", async () => {
     const taskId = "1";
+    const userId ="2"
 
     const taskDetails = {
       id: taskId,
@@ -262,7 +265,7 @@ describe("Task test", () => {
     poolQueryStub.onFirstCall().resolves({ rows: [taskDetails] }); // Task found by ID
     poolQueryStub.onSecondCall().resolves({ rows: [] }); // Task deleted
 
-    const result = await TaskService.deleteTask(taskId);
+    const result = await TaskService.deleteTask(taskId,userId);
 
     expect(result).to.deep.equal({
       status: "Success",
@@ -283,11 +286,12 @@ describe("Task test", () => {
 
   it("should fail to delete a task that does not exist", async () => {
     const taskId = "1";
+    const userId ="2"
 
     poolQueryStub.resolves({ rows: [] }); // No task found by ID
 
     try {
-      await TaskService.deleteTask(taskId);
+      await TaskService.deleteTask(taskId,userId);
     } catch (error: any) {
       expect(error).to.deep.equal({
         status: "Error",

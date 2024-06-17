@@ -24,7 +24,8 @@ export class TaskController {
   ): Promise<any> {
     try {
       const filters = request.query;
-      const result = await TaskService.fetchAll(filters);
+      const userId=(request as any)?.user?.id
+      const result = await TaskService.fetchAll(userId,filters);
       return response.status(result.code).json(result);
     } catch (error) {
       next(error);
@@ -37,8 +38,9 @@ export class TaskController {
     next: NextFunction
   ): Promise<any> {
     try {
-      //  const {id}=request.params.id
-      const result = await TaskService.deleteTask(request.params.id);
+       const taskId=request.params.id
+      const userId= (request as any).user.id
+      const result = await TaskService.deleteTask(taskId, userId);
       return response.status(result.code).json(result);
     } catch (error) {
       next(error);
@@ -51,9 +53,9 @@ export class TaskController {
   ): Promise<any> {
     try {
       //  const {id}= request.params.id
-      const result = await TaskService.editDetails({
+      const result = await TaskService.editDetails((request as any)?.user?.id,{
         ...request.body,
-        id: request.params.id,
+        id: request.params.id
       });
       return response.status(result.code).json(result);
     } catch (error) {
